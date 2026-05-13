@@ -1,0 +1,230 @@
+/* ─── CONTAINER ─────────────────────────────────── */
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* ─── HEADER ────────────────────────────────────── */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.header h2 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: #f8fafc;
+  letter-spacing: -0.25px;
+}
+
+.header p {
+  margin: 5px 0 0;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 13px;
+}
+
+/* ─── GENERATE BUTTON ───────────────────────────── */
+.generateBtn {
+  flex-shrink: 0;
+  padding: 9px 16px;
+  border: none;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #3b82f6, #6366f1);
+  color: white;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    opacity 0.18s ease;
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.22);
+}
+
+.generateBtn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 22px rgba(59, 130, 246, 0.35);
+}
+
+.generateBtn:active {
+  transform: translateY(0);
+  opacity: 0.88;
+}
+
+/* ─── EMPTY ─────────────────────────────────────── */
+.emptyState {
+  padding: 24px 16px;
+  border-radius: 16px;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px dashed rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.emptyState p {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.emptyState span {
+  display: block;
+  margin-top: 6px;
+  font-size: 12px;
+  opacity: 0.6;
+}
+
+/* ─── PLAN LIST ─────────────────────────────────── */
+.planList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* ─── DAY CARD ──────────────────────────────────── */
+.dayCard {
+  padding: 16px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.065);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  transition:
+    transform 0.18s ease,
+    background 0.18s ease,
+    border-color 0.18s ease;
+}
+
+.dayCard:hover {
+  transform: translateY(-2px);
+  background: rgba(255, 255, 255, 0.065);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+/* ─── TOP ───────────────────────────────────────── */
+.dayTop {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  gap: 10px;
+}
+
+.dayTop h3 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: #f1f5f9;
+}
+
+.hours {
+  flex-shrink: 0;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(59, 130, 246, 0.13);
+  color: #60a5fa;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+/* ─── NO TASKS ──────────────────────────────────── */
+.noTasks {
+  opacity: 0.5;
+  font-size: 13px;
+  margin: 0;
+}
+
+/* ─── TASK LIST ─────────────────────────────────── */
+.taskList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* ─── TASK ITEM ─────────────────────────────────── */
+.taskItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 12px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid rgba(255, 255, 255, 0.055);
+  transition: background 0.18s ease;
+}
+
+.taskItem:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+/* ─── TASK TITLE ────────────────────────────────── */
+.taskTitle {
+  margin: 0 0 5px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #e2e8f0;
+}
+
+/* ─── BADGES ────────────────────────────────────── */
+.badge {
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: capitalize;
+  letter-spacing: 0.2px;
+}
+
+.easy {
+  background: rgba(34, 197, 94, 0.15);
+  color: #4ade80;
+}
+
+.medium {
+  background: rgba(250, 204, 21, 0.15);
+  color: #fbbf24;
+}
+
+.hard {
+  background: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+}
+
+/* ─── DURATION ──────────────────────────────────── */
+.duration {
+  flex-shrink: 0;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.55);
+  white-space: nowrap;
+}
+
+/* ─── RESPONSIVE ────────────────────────────────── */
+@media (max-width: 600px) {
+  .header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .generateBtn {
+    width: 100%;
+    text-align: center;
+  }
+
+  .taskItem {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .dayTop {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+}

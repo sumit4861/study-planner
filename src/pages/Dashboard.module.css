@@ -1,0 +1,391 @@
+/* ─── DASHBOARD SHELL ───────────────────────────── */
+.dashboard {
+  display: grid;
+  grid-template-columns: 240px minmax(0, 1fr) 360px;
+  width: 100vw;
+  height: 100vh;
+  /* exact viewport height — no overflow */
+  overflow: hidden;
+  /* nothing leaks out */
+  background:
+    radial-gradient(ellipse 60% 50% at 0% 0%,
+      rgba(59, 130, 246, 0.13) 0%,
+      transparent 60%),
+    radial-gradient(ellipse 50% 45% at 100% 100%,
+      rgba(124, 58, 237, 0.13) 0%,
+      transparent 60%),
+    #020617;
+  color: #f1f5f9;
+  font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", sans-serif;
+}
+
+.sidebar {
+  height: 100vh;
+  overflow: hidden;
+  /* sidebar itself does NOT scroll */
+  position: sticky;
+  top: 0;
+}
+
+/* ─── MAIN CONTENT (only this scrolls) ─────────── */
+.mainContent {
+  height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 28px 48px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.12) transparent;
+}
+
+.mainContent::-webkit-scrollbar {
+  width: 6px;
+}
+
+.mainContent::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.mainContent::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+}
+
+.mainContent::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* ─── TOPBAR ────────────────────────────────────── */
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  padding-bottom: 4px;
+}
+
+.topbar h1 {
+  margin: 0;
+  font-size: 30px;
+  font-weight: 800;
+  color: #f8fafc;
+  letter-spacing: -0.5px;
+  line-height: 1.2;
+}
+
+.topbar p {
+  margin: 6px 0 0;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 14px;
+}
+
+/* ─── AI BUTTON ─────────────────────────────────── */
+.aiBtn {
+  flex-shrink: 0;
+  border: none;
+  border-radius: 14px;
+  padding: 12px 20px;
+  background: linear-gradient(135deg, #3b82f6, #6366f1);
+  color: white;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    opacity 0.18s ease;
+  box-shadow: 0 4px 14px rgba(99, 102, 241, 0.25);
+}
+
+.aiBtn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 28px rgba(59, 130, 246, 0.35);
+}
+
+.aiBtn:active {
+  transform: translateY(0);
+  opacity: 0.9;
+}
+
+/* ─── SECTION SHELL ─────────────────────────────── */
+.todaySection,
+.taskInputSection,
+.allTasksSection {
+  background: rgba(15, 23, 42, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.065);
+  border-radius: 20px;
+  padding: 22px 24px;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow:
+    0 1px 0 0 rgba(255, 255, 255, 0.04) inset,
+    0 8px 28px rgba(0, 0, 0, 0.22);
+}
+
+/* ─── SECTION HEADER ────────────────────────────── */
+.sectionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 18px;
+  gap: 12px;
+}
+
+.sectionHeader h2 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: #f8fafc;
+  letter-spacing: -0.25px;
+}
+
+.taskCount {
+  flex-shrink: 0;
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: rgba(59, 130, 246, 0.14);
+  color: #60a5fa;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+}
+
+/* ─── RIGHT AI PANEL (also fixed, doesn't scroll) ── */
+.aiPanel {
+  height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 28px 22px;
+  background: rgba(10, 18, 38, 0.5);
+  border-left: 1px solid rgba(255, 255, 255, 0.055);
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
+}
+
+.aiPanel::-webkit-scrollbar {
+  width: 5px;
+}
+
+.aiPanel::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
+}
+
+/* ─── AI CARD ───────────────────────────────────── */
+.aiCard {
+  background: rgba(15, 23, 42, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.065);
+  border-radius: 20px;
+  padding: 20px;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.04) inset,
+    0 6px 22px rgba(0, 0, 0, 0.2);
+  transition:
+    transform 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.aiCard:hover {
+  transform: translateY(-2px);
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.04) inset,
+    0 12px 32px rgba(0, 0, 0, 0.3);
+}
+
+/* ─── PROGRESS ──────────────────────────────────── */
+.progressTop {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.progressTop h3 {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 700;
+  color: #f8fafc;
+}
+
+.progressText {
+  font-size: 18px;
+  font-weight: 800;
+  color: #4ade80;
+  letter-spacing: -0.5px;
+}
+
+.progressBar {
+  height: 10px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.07);
+  margin-bottom: 16px;
+}
+
+.progressFill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(to right, #22c55e, #4ade80);
+  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  min-width: 4px;
+}
+
+/* ─── STATS GRID ────────────────────────────────── */
+.progressStats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.statBox {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 14px;
+  padding: 14px 10px;
+  text-align: center;
+  transition: background 0.2s ease;
+}
+
+.statBox:hover {
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.statBox h4 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 800;
+  color: #f8fafc;
+  letter-spacing: -0.5px;
+}
+
+.statBox p {
+  margin: 5px 0 0;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.45);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 500;
+}
+
+/* ─── SCROLLBAR (global) ────────────────────────── */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* ─── RESPONSIVE: Wide Tablet / Small Desktop ───── */
+@media (max-width: 1400px) {
+  .dashboard {
+    grid-template-columns: 80px minmax(0, 1fr);
+  }
+
+  .aiPanel {
+    display: none;
+  }
+}
+
+/* ─── RESPONSIVE: Tablet ────────────────────────── */
+@media (max-width: 1000px) {
+  .dashboard {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr;
+    height: auto;
+    overflow: auto;
+  }
+
+  .mainContent {
+    height: auto;
+    padding: 20px;
+    gap: 16px;
+  }
+
+  .topbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 14px;
+  }
+
+  .topbar h1 {
+    font-size: 26px;
+  }
+
+  .aiBtn {
+    width: 100%;
+    text-align: center;
+    padding: 13px 20px;
+  }
+
+  .todaySection,
+  .taskInputSection,
+  .allTasksSection {
+    padding: 18px 20px;
+  }
+}
+
+/* ─── RESPONSIVE: Mobile ────────────────────────── */
+@media (max-width: 700px) {
+  .mainContent {
+    padding: 12px 14px;
+    gap: 12px;
+  }
+
+  .topbar h1 {
+    font-size: 22px;
+  }
+
+  .todaySection,
+  .taskInputSection,
+  .allTasksSection {
+    padding: 16px;
+    border-radius: 16px;
+  }
+
+  .sectionHeader {
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+  }
+
+  .sectionHeader h2 {
+    font-size: 16px;
+  }
+
+  .progressStats {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+
+  .statBox {
+    padding: 12px 6px;
+  }
+
+  .statBox h4 {
+    font-size: 18px;
+  }
+
+  .aiCard {
+    padding: 16px;
+    border-radius: 16px;
+  }
+}

@@ -4,14 +4,21 @@ import TaskList from "../components/TaskList";
 import TodaysPlan from "../components/TodaysPlan";
 import Completed from "../components/Completed";
 import Pending from "../components/Pending";
+import FiveDaysPlan from "../components/FiveDaysPlan";
+import AISuggestions from "../components/AISuggestions";
+import Sidebar from "../components/Sidebar";
+import styles from "./Dashboard.module.css";
 
-
-function Dashboard({setIsLoggedIn}) {
+function Dashboard({ setIsLoggedIn }) {
   const [task, setTask] = useState("");
   const [date, setDate] = useState("");
   const [tasks, setTasks] = useState([]);
   const [loadingAI, setLoadingAI] = useState(false);
-  const [aiTasks, setAiTasks]  = useState([]);
+  const [difficulty, setDifficulty] = useState("");
+  const [duration, setDuration] = useState(1);
+  const [priority, setPriority] = useState("");
+  const [plan, setPlan] = useState({});
+  const [suggestions, setSuggestions] = useState();
 
   useEffect(() => {
     const getTasks = async () => {
@@ -40,8 +47,14 @@ function Dashboard({setIsLoggedIn}) {
   }, []);
 
   const addTask = async () => {
-    if (!task.trim() || !date) return;
-    const newTask = { title: task, date: date };
+    if (!task.trim() || !date || !difficulty || !duration) return;
+    const newTask = {
+      title: task,
+      date: date,
+      difficulty: difficulty,
+      duration: duration,
+      priority: priority
+    };
 
     const res = await fetch("http://localhost:5000/api/tasks", {
       method: "POST",
@@ -56,6 +69,9 @@ function Dashboard({setIsLoggedIn}) {
     setTasks(prev => [...prev, data]);
     setTask("");
     setDate("");
+    setDifficulty("");
+    setDuration(1);
+    setPriority("medium");
   };
 
   const deleteTask = async (id) => {
@@ -67,7 +83,7 @@ function Dashboard({setIsLoggedIn}) {
         }
       });
       setTasks(prev => prev.filter(task => task._id !== id));
-    } catch(err) {
+    } catch (err) {
       console.log(err);
     }
   };
@@ -85,33 +101,81 @@ function Dashboard({setIsLoggedIn}) {
       setTasks(prev => prev.map(task =>
         task._id === id ? updatedTask : task
       ));
-    } catch(err) {
+    } catch (err) {
       console.log(err);
     }
   };
 
-  const generatePlan = async () => {
+  const normalizePlan = (rawPlan) => {
+    const newPlan = {};
+
+    for (let day in rawPlan) {
+      const tasksArr = Array.isArray(rawPlan[day]) ? rawPlan[day] : [];
+
+      const totalHours = tasksArr.reduce(
+        (sum, t) => sum + (Number(t.duration) || 1),
+        0
+      );
+
+      newPlan[day] = {
+        tasks: tasksArr,
+        totalHours
+      };
+    }
+
+    return newPlan;
+  };
+
+  const generateAIPlan = async () => {
     setLoadingAI(true);
 
-    try{
+    try {
       const res = await fetch("http://localhost:5000/api/generate-plan", {
         method: "POST",
         headers: {
-          "Content-Type": "application/json"
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`
         },
-        body: JSON.stringify({
-          subjects: ["DSA", "DBMS"],
-          hours: 3
-        })
+        body: JSON.stringify({ plan })
       });
-      
+
       const data = await res.json();
-      setAiTasks(data);
-    } catch(err)  {
-      console.log("AI error: ", err);
+
+      if (!data || Object.keys(data).length === 0) {
+        console.log("AI failed → fallback");
+        await fetchPlan();
+        return;
+      }
+
+      const normalized = normalizePlan(data);
+      setPlan(normalized);
+
+    } catch (err) {
+      console.log("AI error:", err);
+
+      // 🔥 fallback on error
+      await fetchPlan();
+    } finally {
+      setLoadingAI(false);
     }
+  };
+
+  const getAISuggestions = async () => {
+    setLoadingAI(true);
+
+    const res = await fetch("http://localhost:5000/api/plan/ai", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: localStorage.getItem("token"),
+      },
+      body: JSON.stringify({ plan }),
+    });
+
+    const data = await res.json();
+    setSuggestions(data.suggestions);
     setLoadingAI(false);
-  }
+  };
 
   const addAiTask = async (task) => {
     const exists = tasks.some(
@@ -122,79 +186,272 @@ function Dashboard({setIsLoggedIn}) {
       return;
     }
 
-    try{
-      const res = await fetch("http://localhost:5000/api/tasks" ,{
+    try {
+      const res = await fetch("http://localhost:5000/api/tasks", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${localStorage.getItem("token")}`
         },
-        body: JSON.stringify({...task, source: "ai"})
+        body: JSON.stringify({ ...task, source: "ai" })
       });
 
       const data = await res.json();
-      setTasks(prev =>[...prev, data]);
+      setTasks(prev => [...prev, data]);
 
       setAiTasks(prev =>
         prev.filter(t => !(t.title === task.title && t.date === task.date))
       );
-    }catch(err) {
+    } catch (err) {
       console.log(err);
     }
   }
-    
-  const total = tasks.length;
-  const completed = tasks.filter(t => t.status === "done").length;
 
-  const sortTasks = () => {
-    const sorted = [...tasks].sort((a, b) => {
-      return new Date(a.date) - new Date(b.date);
-    });
-    setTasks(sorted);
-    console.log("sorting");
-  }
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  const daily_limit = 3;
-  const todaysTasks = [...tasks]
-    // .filter(t => t.status !== 'done')
+  const diffWeight = {
+    easy: 1,
+    medium: 2,
+    hard: 3
+  };
+  const priorityWeight = {
+    high: 3,
+    medium: 2,
+    low: 1
+  };
+
+  const isValid = (task, day) => {
+    const deadline = new Date(task.date);
+    deadline.setHours(0, 0, 0, 0);
+
+    return day <= deadline;
+  }
+  const getScore = (task) => {
+    const taskDate = new Date(task.date);
+    taskDate.setHours(0, 0, 0, 0);
+
+    let score = 0;
+    const diffDays = Math.max(0, (taskDate - today) / (1000 * 60 * 60 * 24));
+    score += Math.max(0, (10 - diffDays));
+    score += (priorityWeight[task.priority] || 2) * 10;
+    score += (diffWeight[task.difficulty] || 2) * 5;
+    return -score; //high score -> high priority
+  }
+
+  const daily_hours = 5;
+  const max_hard_tasks = 1;
+
+  const sortedTasks = [...tasks]
+    .filter(t => t.status !== 'done')
     .sort((a, b) => {
-      const da = new Date(a.date);
-      const db = new Date(b.date);
-      da.setHours(0, 0, 0, 0);
-      db.setHours(0, 0, 0, 0);
-      if(da < today && db >= today) return -1;
-      if(db < today && da >= today) return 1;
-      return da - db;
+      const pa = getScore(a);
+      const pb = getScore(b);
+      return pa - pb;
     })
-    .slice(0, daily_limit);
+
+  const todaysTasks = [];
+  let totalTime = 0;
+  let hardCount = 0;
+
+  for (let task of sortedTasks) {
+    const duration = Number(task.duration) || 1;
+    const isHard = task.difficulty === 'hard';
+
+    if (!isValid(task, today)) continue;
+    if (totalTime + duration > daily_hours) continue;
+    if (isHard && hardCount >= max_hard_tasks) continue;
+
+    todaysTasks.push(task);
+    totalTime += duration;
+
+    if (isHard) hardCount++;
+  }
+
+  const fetchPlan = async () => {
+    const res = await fetch("http://localhost:5000/api/plan", {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`
+      }
+    });
+
+    const data = await res.json();
+    setPlan(data);
+  }
+
+  const totalTasks = tasks.length;
+  const completedTasks = tasks.filter(t => t.status === 'done').length;
+  const progress = totalTasks === 0 ? 0 : Math.round((completedTasks / totalTasks) * 100);
+  const logout = () => {
+    localStorage.removeItem("token");
+    setIsLoggedIn(false);
+  };
+  const Card = ({ title, children }) => (
+    <div style={{
+      background: "rgba(30, 41, 59, 0.6)",
+      backdropFilter: "blur(12px)",
+      border: "1px solid rgba(255,255,255,0.08)",
+      borderRadius: "16px",
+      padding: "16px",
+      marginBottom: "16px",
+      boxShadow: "0 8px 25px rgba(0,0,0,0.4)"
+    }}>
+      <h3 style={{ marginBottom: "10px", opacity: 0.9 }}>{title}</h3>
+      {children}
+    </div>
+  );
+
 
   return (
-    <div>
-      <button onClick={() => {
-        localStorage.removeItem("token");
-        setIsLoggedIn(false);
-      }}>Logout</button>
 
-      <TaskInput task={task} date={date} setDate={setDate} setTask={setTask} addTask={addTask} />
-      
-      <h1>All Tasks</h1>
-      <TaskList tasks={tasks} deleteTask={deleteTask} />
+    <div className={styles.dashboard}>
 
-      <h1>Today's Study Plan</h1>
-      <TodaysPlan todaysTasks={todaysTasks} toggleStatus={toggleStatus} />
+      {/* SIDEBAR */}
 
-      <button onClick={generatePlan}>
-        <h2>{loadingAI ? "Generating..." : "Generate AI Plan"}</h2>
-      </button>
+      <Sidebar />
 
-      {aiTasks.map(t => (
-        <div key={t.title}>
-          {t.title} - {t.date}
-          <button onClick={() => addAiTask(t)}>Add</button>
+      {/* MAIN CONTENT */}
+
+      <main className={styles.mainContent}>
+
+        {/* TOPBAR */}
+
+        <div className={styles.topbar}>
+
+          <div>
+            <h1>
+              Good Evening 👋
+            </h1>
+
+            <p>
+              Stay productive today.
+            </p>
+          </div>
+
+          <button
+            className={styles.aiBtn}
+            onClick={generateAIPlan}
+          >
+            {
+              loadingAI
+                ? "Generating..."
+                : "🤖 AI Optimize"
+            }
+          </button>
+
         </div>
-      ))}
+
+        {/* TODAY SECTION */}
+
+        <section className={styles.todaySection}>
+
+          <div className={styles.sectionHeader}>
+            <h2>📌 Today's Tasks</h2>
+
+            <span className={styles.taskCount}>
+              {todaysTasks.length} Tasks
+            </span>
+          </div>
+
+          <TodaysPlan
+            todaysTasks={todaysTasks}
+            toggleStatus={toggleStatus}
+          />
+
+        </section>
+
+        {/* TASK INPUT */}
+
+        <section className={styles.taskInputSection}>
+
+          <TaskInput
+            task={task}
+            date={date}
+            difficulty={difficulty}
+            duration={duration}
+            priority={priority}
+            setTask={setTask}
+            setDate={setDate}
+            setDifficulty={setDifficulty}
+            setDuration={setDuration}
+            setPriority={setPriority}
+            addTask={addTask}
+          />  
+
+        </section>
+
+      </main>
+
+      {/* RIGHT AI PANEL */}
+
+      <aside className={styles.aiPanel}>
+
+        {/* AI SUGGESTIONS */}
+
+        <div className={styles.aiCard}>
+
+          <AISuggestions
+            suggestions={suggestions}
+          />
+
+        </div>
+
+        {/* PROGRESS */}
+
+        <div className={styles.aiCard}>
+
+          <div className={styles.progressTop}>
+            <h3>📊 Progress</h3>
+
+            <span className={styles.progressText}>
+              {progress}%
+            </span>
+          </div>
+
+          <div className={styles.progressBar}>
+            <div
+              className={styles.progressFill}
+              style={{
+                width: `${progress}%`
+              }}
+            />
+          </div>
+
+          <div className={styles.progressStats}>
+
+            <div className={styles.statBox}>
+              <h4>{tasks.length}</h4>
+              <p>Total</p>
+            </div>
+
+            <div className={styles.statBox}>
+              <h4>{completedTasks}</h4>
+              <p>Done</p>
+            </div>
+
+            <div className={styles.statBox}>
+              <h4>{tasks.length - completedTasks}</h4>
+              <p>Left</p>
+            </div>
+
+          </div>
+
+        </div>
+
+        {/* PLAN */}
+
+        <div className={styles.aiCard}>
+
+          <FiveDaysPlan
+            setPlan={setPlan}
+            fetchPlan={fetchPlan}
+            plan={plan}
+          />
+
+        </div>
+
+      </aside>
+
     </div>
   );
 }

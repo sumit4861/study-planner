@@ -13,7 +13,7 @@ const OpenAI = require("openai");
 const User = require("./models/User");
 const Task = require("./models/Task");
 const auth = require("./middleware/auth");
-
+const generateSmartPlan = require("./utils/scheduler");
 // middleware
 app.use(cors());
 app.use(express.json());
@@ -25,7 +25,7 @@ const client = new OpenAI({
   baseURL: "https://api.groq.com/openai/v1"
 });
 
-mongoose.connect("mongodb://localhost:27017/stu-planner") 
+mongoose.connect(process.env.MONGO_URL) 
 .then(() => console.log("MongoDB connected"))
 .catch(err => console.log(err));
 
@@ -74,46 +74,112 @@ app.post("/api/auth/login", async(req, res) => {
 
 // AI route
 app.post("/api/generate-plan", async (req, res) => {
-  const {subjects, hours} = req.body;
-  try {    
+  const tasks = req.body.tasks;
+
+  try {
     const prompt = `
-    Create a 5-day study plan.
-    Subjects: ${subjects.join(", ")}
-    Time per day: ${hours} hours
-    
+    You are a smart study planner.
+
+    Given these 5 days plan:
+    ${JSON.stringify(tasks)}
+
+    Create an optimized 5-day schedule.
+
+    Rules:
+    - Do not exceed 5 hours per day
+    - Prioritize urgent + high priority tasks
+    - Balance difficulty
+    - Respect deadlines
+
     Return ONLY JSON:
-    [
-      { "title": "...", "date": "2026-05-01" }
-    ]
+
+    {
+      "2026-05-06": [
+        { "title": "...", "duration": 2 }
+      ]
+    }
     `;
+
     const response = await client.chat.completions.create({
-      // best first
       model: "llama-3.1-8b-instant",
-      messages: [{
-        role: "user",
-        content: prompt
-      }]
+      messages: [{ role: "user", content: prompt }]
     });
+
     const text = response.choices[0].message.content;
 
-    // Extract JSON safely
-    const json = JSON.parse(text.match(/\[.*\]/s)[0]);
+    const start = text.indexOf("{");
+    const end = text.lastIndexOf("}");
 
-    //convert AI output into DB format
-    const aiTasks = json.map(task => ({
-      title: task.title,
-      date: task.date,
-      status: "pending",
-      source: "ai"
-    }));
+    if (start === -1 || end === -1) {
+      console.log("AI RAW:", text);
+      return res.status(200).json({});
+    }
 
-    res.json(aiTasks);
+    const jsonString = text.slice(start, end + 1);
+
+    let json;
+
+    try {
+      json = JSON.parse(jsonString);
+    } catch (err) {
+      // console.log("PARSE ERROR:", err);
+      // console.log("BAD JSON:", jsonString);
+      return res.status(200).json({});
+    }
+
+    res.json(json);
 
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "AI generation failed" });
   }
-}) 
+});
+
+app.post("/api/plan/ai", auth, async (req, res) => {
+  try {
+    const { plan } = req.body;
+
+    const prompt = `
+    You are a smart study planner assistant.
+
+    Here is a student's study plan:
+    ${JSON.stringify(plan)}
+
+    Analyze it and suggest improvements:
+    - balance workload
+    - avoid too many hard tasks in one day
+    - improve efficiency
+
+    Give 4-5 very short bullet points of atmost 5 words in a point.
+    `;
+
+    const response = await client.chat.completions.create({
+      model: "llama-3.1-8b-instant",
+      messages: [{ role: "user", content: prompt }]
+    });
+
+    const aiText = response.choices[0].message.content;
+
+    res.json({ suggestions: aiText });
+
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ error: "AI failed" });
+  }
+});
+
+// Smart plan
+app.get("/api/plan", auth, async (req, res) => {
+  try {
+    const tasks = await Task.find({ userId: req.user.id });
+
+    const plan = generateSmartPlan(tasks);
+
+    res.json(plan);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
 // route
 app.route("/api/tasks")
@@ -127,27 +193,30 @@ app.route("/api/tasks")
       date: req.body.date,
       status: req.body.status || "pending",
       source: req.body.source,
-      userId: req.user.id
+      userId: req.user.id,
+      difficulty: req.body.difficulty || "medium",
+      duration: req.body.duration || 1,
+      priority: req.body.priority
     });
     await newTask.save();
     res.json(newTask);
   });
 
 app.route("/api/tasks/:id")
-  .put( async (req, res) => {
+  .put(auth, async (req, res) => {
     const task = await Task.findById(req.params.id);
     //toggle status
     task.status = task.status === "pending" ? "done" : "pending";
     await task.save();
     res.json(task);
   })
-  .post( async (req, res) => {
+  .post(auth, async (req, res) => {
     const newTask = new Task(req.body);
     console.log(newTask);
     await newTask.save(); 
     res.json(newTask);
   })
-  .delete(async (req, res) => {
+  .delete(auth, async (req, res) => {
     try{
       const id = req.params.id;  // req.params = {id : "5"};
       await Task.findByIdAndDelete(id);

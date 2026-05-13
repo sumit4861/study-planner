@@ -11,6 +11,20 @@ const TaskSchema = new mongoose.Schema({
   source: {
     type: String,
     default: "manual"
+  },
+  difficulty: {
+    type: String,
+    enum: ["easy", "medium", "hard"],
+    default: "medium"
+  },
+  duration: {
+    type: Number,
+    default: 1
+  },
+  priority: {
+    type: String,
+    enum: ["low", "medium", "high"],
+    default: "medium"
   }
 });
 

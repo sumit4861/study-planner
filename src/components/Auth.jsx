@@ -1,87 +1,229 @@
 import { useState } from "react";
+import styles from "./Auth.module.css";
+import { useNavigate } from "react-router-dom";
 
-function Auth({setIsLoggedIn}) {
+function Auth({ setIsLoggedIn }) {
+
   const [error, setError] = useState("");
-  const [isLogin, setIslogin] = useState(true);
+  const [showPassword, setShowPassword] =
+    useState(false);
+
+  const [isLogin, setIslogin] =
+    useState(true);
+
   const [form, setForm] = useState({
     name: "",
     email: "",
     password: ""
   });
+  const navigate = useNavigate();
+
   const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    setForm({
+      ...form,
+      [e.target.name]: e.target.value
+    });
   };
 
   const handleSubmit = async () => {
-    setError("");
-    const url = isLogin ? 
-    "http://localhost:5000/api/auth/login"
-    : "http://localhost:5000/api/auth/signup";
-    
-    const body = isLogin ?
-    {email: form.email, password: form.password} 
-    : form;
-    const res = await fetch(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(body)
-    });
-    
-    const data = await res.json();
 
-    if(!res.ok) {
-      setError(data.msg || "Something went wrong.");
-      return ;
+    setError("");
+
+    const url = isLogin
+      ? "http://localhost:5000/api/auth/login"
+      : "http://localhost:5000/api/auth/signup";
+
+    const body = isLogin
+      ? {
+        email: form.email,
+        password: form.password
+      }
+      : form;
+
+    try {
+
+      const res = await fetch(url, {
+        method: "POST",
+
+        headers: {
+          "Content-Type": "application/json"
+        },
+
+        body: JSON.stringify(body)
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(
+          data.msg || "Something went wrong."
+        );
+        return;
+      }
+
+      if (isLogin) {
+
+        localStorage.setItem(
+          "token",
+          data.token
+        );
+
+        setIsLoggedIn(true);
+        navigate("/");
+
+      } else {
+
+        setError("");
+
+        setIslogin(true);
+      }
+
+    } catch (err) {
+
+      setError("Server error. Try again.");
     }
-    if(isLogin) {
-      localStorage.setItem("token", data.token);
-      setIsLoggedIn(true);
-    } else {
-      alert("Signup successful! Now login.");
-      setIslogin(true);
-    }
-    
   };
 
   return (
-    <form onSubmit={(e) => e.preventDefault()}>
-      <h2>{isLogin ? "Login" : "Signup"}</h2>
-      {!isLogin && (
-        <input 
-          name="name"
-          placeholder="Name"
-          onChange={handleChange}
-        />
-      )}
+    <div className={styles.authPage}>
 
-      <input
-        name = "email"
-        placeholder = "Email"
-        onChange={handleChange}
-      />
+      {/* LEFT SIDE */}
+      <div className={styles.leftPanel}>
 
-      <input
-        type="Password"
-        name = "password"
-        placeholder="Password"
-        onChange={handleChange}
-      />
+        <div className={styles.overlay} />
 
-      <button onClick={handleSubmit}>
-        {isLogin ? "Login" : "Signup"}
-      </button>
-      {error && (
-        <p style={{color: "red", marginTop: "10px"}}>{error}</p>
-      )}
-      <p onClick={() => setIslogin(!isLogin)} style={{ cursor: "pointer" }}>
-        {isLogin ? 
-        "Don't have an account? Signup"
-        : "Already have an account? Login"}
-      </p>
-    </form>
-  )
+        <div className={styles.leftContent}>
+          <h1>📚 StudyAI</h1>
+
+          <p>
+            Smart planning for focused students.
+          </p>
+        </div>
+
+      </div>
+
+      {/* RIGHT SIDE */}
+      <div className={styles.rightPanel}>
+
+        <form
+          className={styles.authCard}
+          onSubmit={(e) => {
+            e.preventDefault();
+            handleSubmit();
+          }}
+        >
+
+          <h2>
+            {isLogin
+              ? "Welcome Back 👋"
+              : "Create Account"}
+          </h2>
+
+          <p className={styles.subtitle}>
+            {isLogin
+              ? "Login to continue your productivity journey"
+              : "Start organizing smarter today"}
+          </p>
+
+          {/* NAME */}
+          {!isLogin && (
+            <div className={styles.inputGroup}>
+              <label>Name</label>
+
+              <input
+                name="name"
+                placeholder="Enter your name"
+                onChange={handleChange}
+                className={styles.input}
+              />
+            </div>
+          )}
+
+          {/* EMAIL */}
+          <div className={styles.inputGroup}>
+            <label>Email</label>
+
+            <input
+              name="email"
+              type="email"
+              placeholder="Enter your email"
+              onChange={handleChange}
+              className={styles.input}
+            />
+          </div>
+
+          {/* PASSWORD */}
+          <div className={styles.inputGroup}>
+            <label>Password</label>
+
+            <div className={styles.passwordBox}>
+
+              <input
+                type={
+                  showPassword
+                    ? "text"
+                    : "password"
+                }
+
+                name="password"
+
+                placeholder="Enter password"
+
+                onChange={handleChange}
+
+                className={styles.input}
+              />
+
+              <button
+                type="button"
+                className={styles.eyeBtn}
+                onClick={() =>
+                  setShowPassword(
+                    !showPassword
+                  )
+                }
+              >
+                {showPassword ? "🙈" : "👁"}
+              </button>
+
+            </div>
+          </div>
+
+          {/* ERROR */}
+          {error && (
+            <div className={styles.error}>
+              {error}
+            </div>
+          )}
+
+          {/* BUTTON */}
+          <button
+            className={styles.submitBtn}
+            onClick={handleSubmit}
+          >
+            {isLogin
+              ? "Login"
+              : "Create Account"}
+          </button>
+
+          {/* SWITCH */}
+          <p
+            className={styles.switchText}
+            onClick={() =>
+              setIslogin(!isLogin)
+            }
+          >
+            {isLogin
+              ? "Don't have an account? Signup"
+              : "Already have an account? Login"}
+          </p>
+
+        </form>
+
+      </div>
+
+    </div>
+  );
 }
 
 export default Auth;
