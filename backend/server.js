@@ -74,61 +74,74 @@ app.post("/api/auth/login", async(req, res) => {
 
 // AI route
 app.post("/api/generate-plan", async (req, res) => {
-  const tasks = req.body.tasks;
-
+  const plan = req.body.tasks;
   try {
-    const prompt = `
-    You are a smart study planner.
+    // Build simplified input — don't send full mongo docs
+    const simplifiedPlan = {};
+    const validTasks = new Set();
 
-    Given these 5 days plan:
-    ${JSON.stringify(tasks)}
+    Object.entries(plan).forEach(([date, day]) => {
+      if (!day.tasks || day.tasks.length === 0) return;
+      simplifiedPlan[date] = day.tasks.map(task => {
+        validTasks.add(task.title);
+        return { title: task.title, duration: task.duration };
+      });
+    });
 
-    Create an optimized 5-day schedule.
+    const prompt = `Optimize this study plan. Rules:
+- Use ONLY these task titles: ${JSON.stringify([...validTasks])}
+- Max 5 hours per day
+- You may split tasks: "DSA" → "DSA - Part 1", "DSA - Part 2"
+- Preserve total duration of each task
+- Move/rebalance tasks across days freely
 
-    Rules:
-    - Do not exceed 5 hours per day
-    - Prioritize urgent + high priority tasks
-    - Balance difficulty
-    - Respect deadlines
+Input plan:
+${JSON.stringify(simplifiedPlan)}
 
-    Return ONLY JSON:
-
-    {
-      "2026-05-06": [
-        { "title": "...", "duration": 2 }
-      ]
-    }
-    `;
+Return ONLY a JSON object like:
+{"2026-05-18": [{"title": "DSA - Part 1", "duration": 2}]}`;
 
     const response = await client.chat.completions.create({
       model: "llama-3.1-8b-instant",
-      messages: [{ role: "user", content: prompt }]
+      messages: [
+        {
+          role: "system",
+          content: "You are a JSON API. You output only valid JSON with no explanation, no markdown, no code blocks, no backticks. Raw JSON only."
+        },
+        {
+          role: "user",
+          content: prompt
+        }
+      ],
+      response_format: { type: "json_object" }, // forces JSON output on Groq
+      temperature: 0.3, // lower = more predictable output
     });
 
     const text = response.choices[0].message.content;
 
-    const start = text.indexOf("{");
-    const end = text.lastIndexOf("}");
-
-    if (start === -1 || end === -1) {
-      console.log("AI RAW:", text);
-      return res.status(200).json({});
+    let json;
+    try {
+      // Still strip fences defensively
+      const clean = text.replace(/```json|```/g, "").trim();
+      json = JSON.parse(clean);
+    } catch (err) {
+      console.log("BAD JSON:", text);
+      return res.status(500).json({ error: "AI returned invalid JSON" });
     }
 
-    const jsonString = text.slice(start, end + 1);
-
-    let json;
-
-    try {
-      json = JSON.parse(jsonString);
-    } catch (err) {
-      // console.log("PARSE ERROR:", err);
-      // console.log("BAD JSON:", jsonString);
-      return res.status(200).json({});
+    // Validate titles
+    for (const dayTasks of Object.values(json)) {
+      if (!Array.isArray(dayTasks)) continue;
+      for (const task of dayTasks) {
+        const baseTitle = task.title.replace(/ - Part \d+$/i, "").trim();
+        if (!validTasks.has(baseTitle)) {
+          console.log("Invalid AI task:", task.title);
+          return res.status(400).json({ error: "AI generated invalid task title" });
+        }
+      }
     }
 
     res.json(json);
-
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "AI generation failed" });
@@ -174,7 +187,6 @@ app.get("/api/plan", auth, async (req, res) => {
     const tasks = await Task.find({ userId: req.user.id });
 
     const plan = generateSmartPlan(tasks);
-
     res.json(plan);
   } catch (err) {
     res.status(500).json({ error: err.message });

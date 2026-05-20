@@ -126,7 +126,7 @@
 }
 
 /* ─── RESPONSIVE: Narrow sidebar ───────────────── */
-@media (max-width: 1400px) {
+@media (max-width: 1280px) {
   .sidebar {
     width: 80px;
     padding: 22px 10px;
@@ -180,8 +180,9 @@
 }
 
 /* ─── RESPONSIVE: Horizontal nav bar ────────────── */
-@media (max-width: 1000px) {
+@media (max-width: 768px) {
   .sidebar {
+    gap: 10px;
     width: 100%;
     height: auto;
     flex-direction: row;
@@ -243,26 +244,40 @@
 /* ─── RESPONSIVE: Mobile ────────────────────────── */
 @media (max-width: 700px) {
   .sidebar {
-    padding: 10px 14px;
+    /* padding: 10px 14px; */
+    display: flex;
+    flex-direction: column;
+    justify-content: space-evenly;
   }
-
+  .topSection {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    width: 100%;
+    /* gap: 20px; */
+  }
   .logo {
-    font-size: 16px;
+    font-size: 30px;
+  }
+  .menu {
+    display: flex;
+    flex-direction: row;
+    margin: 0;
+    padding: 0;
   }
 
   .menuItem span:last-child {
-    display: none;
+    /* display: none; */
   }
 
   .menuItem {
     padding: 9px 10px;
     border-radius: 10px;
+    display: flex;
+    flex-direction: column;
     justify-content: center;
-  }
 
-  .logout {
-    display: none;
-  }
+  } 
 
   .active {
     border: 1px solid rgba(99, 102, 241, 0.3);

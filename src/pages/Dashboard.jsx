@@ -1,9 +1,6 @@
 import { useState, useEffect } from "react";
 import TaskInput from "../components/TaskInput";
-import TaskList from "../components/TaskList";
 import TodaysPlan from "../components/TodaysPlan";
-import Completed from "../components/Completed";
-import Pending from "../components/Pending";
 import FiveDaysPlan from "../components/FiveDaysPlan";
 import AISuggestions from "../components/AISuggestions";
 import Sidebar from "../components/Sidebar";
@@ -72,20 +69,6 @@ function Dashboard({ setIsLoggedIn }) {
     setDifficulty("");
     setDuration(1);
     setPriority("medium");
-  };
-
-  const deleteTask = async (id) => {
-    try {
-      await fetch(`http://localhost:5000/api/tasks/${id}`, {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`
-        }
-      });
-      setTasks(prev => prev.filter(task => task._id !== id));
-    } catch (err) {
-      console.log(err);
-    }
   };
 
   const toggleStatus = async (id) => {
@@ -301,15 +284,26 @@ function Dashboard({ setIsLoggedIn }) {
     </div>
   );
 
+  const hour = new Date().getHours();
+
+  let greeting = "";
+
+  if (hour < 12) {
+    greeting = "Good Morning ☀️";
+  }
+  else if (hour < 17) {
+    greeting = "Good Afternoon 🌤";
+  }
+  else {
+    greeting = "Good Evening 🌙";
+  }
 
   return (
 
     <div className={styles.dashboard}>
-
       {/* SIDEBAR */}
 
       <Sidebar />
-
       {/* MAIN CONTENT */}
 
       <main className={styles.mainContent}>
@@ -320,24 +314,13 @@ function Dashboard({ setIsLoggedIn }) {
 
           <div>
             <h1>
-              Good Evening 👋
+              {greeting}
             </h1>
 
             <p>
               Stay productive today.
             </p>
           </div>
-
-          <button
-            className={styles.aiBtn}
-            onClick={generateAIPlan}
-          >
-            {
-              loadingAI
-                ? "Generating..."
-                : "🤖 AI Optimize"
-            }
-          </button>
 
         </div>
 
@@ -383,18 +366,7 @@ function Dashboard({ setIsLoggedIn }) {
       </main>
 
       {/* RIGHT AI PANEL */}
-
       <aside className={styles.aiPanel}>
-
-        {/* AI SUGGESTIONS */}
-
-        <div className={styles.aiCard}>
-
-          <AISuggestions
-            suggestions={suggestions}
-          />
-
-        </div>
 
         {/* PROGRESS */}
 

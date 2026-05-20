@@ -1,258 +1,233 @@
 import { useEffect, useState } from "react";
 import Sidebar from "../components/Sidebar";
-import styles from "./Dashboard.module.css";
+import dashStyles from "./Dashboard.module.css";
 import planStyles from "./Plan.module.css";
-
-const MONTH_NAMES = [
-  "January", "February", "March", "April", "May", "June",
-  "July", "August", "September", "October", "November", "December"
-];
-
-const DIFF_COLORS = {
-  easy: { bg: "rgba(34,197,94,0.18)", color: "#4ade80", border: "rgba(34,197,94,0.3)" },
-  medium: { bg: "rgba(250,204,21,0.18)", color: "#facc15", border: "rgba(250,204,21,0.3)" },
-  hard: { bg: "rgba(239,68,68,0.18)", color: "#f87171", border: "rgba(239,68,68,0.3)" },
-};
 
 function Plan() {
   const [tasks, setTasks] = useState([]);
-  const [selectedDay, setSelectedDay] = useState(null); // for mobile popup
+  const [plan, setPlan] = useState({});
+  const [aiPlan, setAIPlan] = useState({});
+  const [loadingAI, setLoadingAI] = useState(false);
 
-  const today = new Date();
-  const currentMonth = today.getMonth();
-  const currentYear = today.getFullYear();
-
+  /* FETCH TASKS */
   useEffect(() => {
     fetch("http://localhost:5000/api/tasks", {
-      headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
     })
       .then((res) => res.json())
-      .then((data) => setTasks(Array.isArray(data) ? data : []));
+      .then((data) => setTasks(data));
   }, []);
 
-  const firstDay = new Date(currentYear, currentMonth, 1).getDay();
-  const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+  /* GENERATE NORMAL PLAN */
+  const fetchPlan = async () => {
+    try {
+      const res = await fetch("http://localhost:5000/api/plan", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+      const data = await res.json();
+      setPlan(data);
+    } catch (err) {
+      console.log(err);
+    }
+  };
 
-  const days = [];
-  for (let i = 0; i < firstDay; i++) days.push(null);
-  for (let d = 1; d <= daysInMonth; d++) days.push(d);
+  /* GENERATE AI PLAN */
+  const generateAIPlan = async () => {
+    if (Object.keys(plan).length === 0) {
+      alert("Generate Smart Plan first");
+      return;
+    }
+    setLoadingAI(true);
+    try {
+      const res = await fetch("http://localhost:5000/api/generate-plan", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: JSON.stringify({ tasks: plan }),
+      });
+      const data = await res.json();
+      setAIPlan(data);
+    } catch (err) {
+      console.log(err);
+    }
+    setLoadingAI(false);
+  };
 
-  const getTasksForDay = (day) =>
-    tasks.filter((t) => {
-      const d = new Date(t.date);
-      return d.getDate() === day && d.getMonth() === currentMonth && d.getFullYear() === currentYear;
-    });
+  /* ADD AI TASK */
+  const addAITask = async (task, date) => {
+    try {
+      const res = await fetch("http://localhost:5000/api/tasks", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: JSON.stringify({
+          ...task,
+          date,
+          source: "ai",
+          status: "pending",
+        }),
+      });
+      const data = await res.json();
+      setTasks((prev) => [...prev, data]);
+    } catch (err) {
+      console.log(err);
+    }
+  };
 
+  /* STATS */
   const totalTasks = tasks.length;
   const completedTasks = tasks.filter((t) => t.status === "done").length;
-  const totalHours = tasks.reduce((sum, t) => sum + (t.duration || 0), 0);
-
-  const selectedTasks = selectedDay ? getTasksForDay(selectedDay) : [];
+  const pendingTasks = totalTasks - completedTasks;
 
   return (
-    <div className={styles.dashboard}>
+    /* Use Dashboard's grid shell — sidebar + content column */
+    <div className={dashStyles.dashboard}>
+
+      {/* SIDEBAR */}
       <Sidebar />
 
-      <main className={styles.mainContent}>
+      {/* PAGE WRAPPER — takes the remaining grid column(s) */}
+      <div className={planStyles.pageWrapper}>
 
-        {/* ── TOPBAR ── */}
-        <div className={styles.topbar}>
-          <div>
-            <h1>🗓 Study Calendar</h1>
-            <p>Visual overview of all scheduled tasks</p>
-          </div>
-          <div className={planStyles.monthBadge}>
-            {MONTH_NAMES[currentMonth]} {currentYear}
-          </div>
-        </div>
+        {/* ── TOP BAR ── */}
+        <div className={planStyles.topBar}>
 
-        {/* ── STATS ROW ── */}
-        <div className={planStyles.statsRow}>
-          <div className={planStyles.statChip}>
-            <span className={planStyles.statChipIcon}>📋</span>
-            <div>
-              <p className={planStyles.statChipVal}>{totalTasks}</p>
-              <p className={planStyles.statChipLabel}>Total Tasks</p>
+          <div className={planStyles.topBarLeft}>
+            <div className={planStyles.topBarTitle}>
+              <h1>🧠 Smart Planning</h1>
+              <p>AI optimized study management</p>
             </div>
-          </div>
-          <div className={planStyles.statChip}>
-            <span className={planStyles.statChipIcon}>✅</span>
-            <div>
-              <p className={planStyles.statChipVal}>{completedTasks}</p>
-              <p className={planStyles.statChipLabel}>Completed</p>
-            </div>
-          </div>
-          <div className={planStyles.statChip}>
-            <span className={planStyles.statChipIcon}>⏱</span>
-            <div>
-              <p className={planStyles.statChipVal}>{totalHours}h</p>
-              <p className={planStyles.statChipLabel}>Scheduled</p>
-            </div>
-          </div>
-        </div>
 
-        {/* ── CALENDAR CARD ── */}
-        <section className={`${styles.allTasksSection} ${planStyles.calendarSection}`}>
-
-          {/* Weekday headers */}
-          <div className={planStyles.weekdays}>
-            {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d) => (
-              <div key={d} className={planStyles.weekdayLabel}>{d}</div>
-            ))}
-          </div>
-
-          {/* ── DESKTOP grid (full task pills) ── */}
-          <div className={planStyles.calendarGrid}>
-            {days.map((day, index) => {
-              const dayTasks = day ? getTasksForDay(day) : [];
-              const isToday = day === today.getDate();
-
-              return (
-                <div
-                  key={index}
-                  className={`${planStyles.dayCard} ${isToday ? planStyles.today : ""} ${!day ? planStyles.emptyCell : ""}`}
-                >
-                  {day && (
-                    <>
-                      <div className={`${planStyles.dayHeader} ${isToday ? planStyles.todayHeader : ""}`}>
-                        <span className={planStyles.dayNum}>{day}</span>
-                        {isToday && <span className={planStyles.todayDot} />}
-                      </div>
-                      <div className={planStyles.taskContainer}>
-                        {dayTasks.length === 0 ? (
-                          <p className={planStyles.emptyText}>—</p>
-                        ) : (
-                          dayTasks.map((task) => (
-                            <div
-                              key={task._id}
-                              className={`${planStyles.taskPill} ${planStyles[task.difficulty]}`}
-                            >
-                              <span className={planStyles.taskTitle}>{task.title}</span>
-                              <span className={planStyles.taskDur}>{task.duration}h</span>
-                            </div>
-                          ))
-                        )}
-                      </div>
-                    </>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-
-          {/* ── MOBILE grid (compact dots, tap to open popup) ── */}
-          <div className={planStyles.mobileGrid}>
-            {days.map((day, index) => {
-              const dayTasks = day ? getTasksForDay(day) : [];
-              const isToday = day === today.getDate();
-              const hasTasks = dayTasks.length > 0;
-              // dominant difficulty colour for the dot
-              const diffPrio = ["hard", "medium", "easy"];
-              const dominant = diffPrio.find((d) => dayTasks.some((t) => t.difficulty === d));
-              const dotColor = dominant ? DIFF_COLORS[dominant].color : null;
-
-              return (
-                <div
-                  key={index}
-                  className={`
-                    ${planStyles.mobileDay}
-                    ${isToday ? planStyles.mobileDayToday : ""}
-                    ${!day ? planStyles.mobileDayEmpty : ""}
-                    ${hasTasks ? planStyles.mobileDayHasTasks : ""}
-                  `}
-                  onClick={() => day && hasTasks && setSelectedDay(day)}
-                >
-                  {day && (
-                    <>
-                      <span className={planStyles.mobileDayNum}>{day}</span>
-                      {hasTasks && (
-                        <span
-                          className={planStyles.mobileDot}
-                          style={{ background: dotColor }}
-                        />
-                      )}
-                    </>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-
-          {/* Legend */}
-          <div className={planStyles.legend}>
-            <span className={`${planStyles.legendDot} ${planStyles.easy}`} />Easy
-            <span className={`${planStyles.legendDot} ${planStyles.medium}`} />Medium
-            <span className={`${planStyles.legendDot} ${planStyles.hard}`} />Hard
-            <span className={planStyles.legendSep} />
-            <span className={planStyles.legendToday}>■</span>Today
-          </div>
-        </section>
-      </main>
-
-      {/* ── MOBILE POPUP OVERLAY ── */}
-      {selectedDay && (
-        <div
-          className={planStyles.popupOverlay}
-          onClick={() => setSelectedDay(null)}
-        >
-          <div
-            className={planStyles.popup}
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Popup header */}
-            <div className={planStyles.popupHeader}>
-              <div>
-                <h3 className={planStyles.popupTitle}>
-                  {MONTH_NAMES[currentMonth]} {selectedDay}
-                </h3>
-                <p className={planStyles.popupSub}>
-                  {selectedTasks.length} task{selectedTasks.length !== 1 ? "s" : ""} scheduled
-                </p>
+            <div className={planStyles.statsRow}>
+              <div className={planStyles.statPill}>
+                <span className={planStyles.statNum}>{totalTasks}</span>
+                <span className={planStyles.statLabel}>Total</span>
               </div>
-              <button
-                className={planStyles.popupClose}
-                onClick={() => setSelectedDay(null)}
-              >✕</button>
+              <div className={planStyles.statPill}>
+                <span className={planStyles.statNum} style={{ color: "#4ade80" }}>
+                  {completedTasks}
+                </span>
+                <span className={planStyles.statLabel}>Done</span>
+              </div>
+              <div className={planStyles.statPill}>
+                <span className={planStyles.statNum} style={{ color: "#f59e0b" }}>
+                  {pendingTasks}
+                </span>
+                <span className={planStyles.statLabel}>Pending</span>
+              </div>
             </div>
+          </div>
 
-            {/* Task list */}
-            <div className={planStyles.popupTasks}>
-              {selectedTasks.map((task) => {
-                const dc = DIFF_COLORS[task.difficulty] || DIFF_COLORS.medium;
-                return (
-                  <div
-                    key={task._id}
-                    className={planStyles.popupTask}
-                    style={{
-                      background: dc.bg,
-                      borderColor: dc.border,
-                      color: dc.color,
-                    }}
-                  >
-                    <div className={planStyles.popupTaskTop}>
-                      <span className={planStyles.popupTaskTitle}>{task.title}</span>
-                      <span className={planStyles.popupTaskDur}>{task.duration}h</span>
+          <div className={planStyles.topActions}>
+            <button className={dashStyles.aiBtn} onClick={fetchPlan}>
+              📅 Generate Plan
+            </button>
+            <button className={dashStyles.aiBtn} onClick={generateAIPlan}>
+              {loadingAI ? "Generating..." : "🤖 AI Optimize"}
+            </button>
+          </div>
+        </div>
+
+        {/* ── TWO-PANEL SPLIT ── */}
+        <div className={planStyles.splitPane}>
+
+          {/* LEFT — Smart Plan */}
+          <section className={planStyles.pane}>
+            <div className={dashStyles.sectionHeader}>
+              <h2>📅 Smart Study Plan</h2>
+            </div>
+            <div className={planStyles.paneScroll}>
+              {Object.keys(plan).length === 0 ? (
+                <p className={planStyles.empty}>
+                  No plan generated yet. Click "Generate Plan" to start.
+                </p>
+              ) : (
+                Object.entries(plan).map(([day, data]) => (
+                  <div key={day} className={planStyles.dayCard}>
+                    <div className={planStyles.dayTop}>
+                      <h3>{day}</h3>
+                      <span>{data.totalHours}h</span>
                     </div>
-                    <div className={planStyles.popupTaskMeta}>
-                      <span className={planStyles.popupBadge} style={{ borderColor: dc.border }}>
-                        {task.difficulty}
-                      </span>
-                      {task.priority && (
-                        <span className={planStyles.popupBadge} style={{ borderColor: dc.border }}>
-                          {task.priority}
-                        </span>
-                      )}
-                      {task.status === "done" && (
-                        <span className={planStyles.popupDone}>✓ Done</span>
+                    <div className={planStyles.taskList}>
+                      {(data?.tasks || []).map((task) => (
+                        <div key={task._id} className={planStyles.taskItem}>
+                          <div>
+                            <h4>{task.title}</h4>
+                            <p>⏱ {task.duration}h</p>
+                          </div>
+                          <span className={planStyles[task.difficulty]}>
+                            {task.difficulty}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </section>
+
+          {/* DIVIDER */}
+          <div className={planStyles.divider} />
+
+          {/* RIGHT — AI Plan */}
+          <section className={planStyles.pane}>
+            <div className={dashStyles.sectionHeader}>
+              <h2>🤖 AI Generated Plan</h2>
+            </div>
+            <div className={planStyles.paneScroll}>
+              {Object.keys(aiPlan).length === 0 ? (
+                <p className={planStyles.empty}>
+                  No AI plan yet. Generate a Smart Plan first, then click "AI Optimize".
+                </p>
+              ) : (
+                Object.entries(aiPlan).map(([day, dayTasks]) => (
+                  <div key={day} className={planStyles.dayCard}>
+                    <div className={planStyles.dayTop}>
+                      <h3>{day}</h3>
+                      <span>AI Optimized</span>
+                    </div>
+                    <div className={planStyles.taskList}>
+                      {Array.isArray(dayTasks) ? (
+                        dayTasks.map((task, index) => (
+                          <div
+                            key={index}
+                            className={`${planStyles.taskItem} ${planStyles.aiTask}`}
+                          >
+                            <div>
+                              <h4>{task.title}</h4>
+                              <p>⏱ {task.duration}h</p>
+                            </div>
+                            <button
+                              className={planStyles.addBtn}
+                              onClick={() => addAITask(task, day)}
+                            >
+                              + Add
+                            </button>
+                          </div>
+                        ))
+                      ) : (
+                        <p className={planStyles.empty}>No AI tasks for this day.</p>
                       )}
                     </div>
                   </div>
-                );
-              })}
+                ))
+              )}
             </div>
-          </div>
+          </section>
+
         </div>
-      )}
+      </div>
     </div>
   );
 }

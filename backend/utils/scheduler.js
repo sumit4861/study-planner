@@ -53,6 +53,7 @@ const generateSmartPlan = (tasks) => {
     .filter(t => t.status !== "done")
     .sort((a, b) => getScore(b) - getScore(a)); // descending
 
+  const overflowTasks = [];
   for (let task of sortedTasks) {
     const duration = Number(task.duration) || 1;
     const isHard = task.difficulty === "hard";
@@ -77,8 +78,29 @@ const generateSmartPlan = (tasks) => {
 
     // fallback
     if (!assigned) {
-      const lastDay = dayKeys[dayKeys.length - 1];
-      plan[lastDay].tasks.push(task);
+      overflowTasks.push(task);
+    }
+  }
+
+  /* OVERFLOW PASS */
+  let overflowIndex = 0;
+
+  for (let task of overflowTasks) {
+
+    const duration = Number(task.duration) || 1;
+    const isHard = task.difficulty === "hard";
+
+    for (let dayKey of dayKeys) {
+      const day = new Date(dayKey);
+
+      if (plan[dayKey].totalHours + duration > daily_hours) continue;
+      if (isHard && plan[dayKey].hardCount >= max_hard_tasks) continue;
+
+      plan[dayKey].tasks.push(task);
+      plan[dayKey].totalHours += duration;
+
+      if (isHard) plan[dayKey].hardCount++;
+      break;
     }
   }
 

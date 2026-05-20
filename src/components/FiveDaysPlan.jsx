@@ -39,81 +39,163 @@ function FiveDaysPlan({ setPlan, fetchPlan, plan }) {
           </span>
         </div>
       ) : (
-        <div className={styles.planList}>
-          {sortedDays.map((day) => {
+          <div className={styles.timeline}>
 
-            const data = plan[day];
+            {sortedDays.map((day, index) => {
 
-            const d = new Date(day);
-            const today = new Date();
+              const data = plan[day];
 
-            today.setHours(0, 0, 0, 0);
-            d.setHours(0, 0, 0, 0);
+              const totalTasks =
+                data.tasks.length;
 
-            const diff =
-              (d - today) /
-              (1000 * 60 * 60 * 24);
+              const hardTasks =
+                data.tasks.filter(
+                  t => t.difficulty === "hard"
+                ).length;
 
-            let label = day;
+              const productivity =
+                Math.min(
+                  100,
+                  Math.round(
+                    (data.totalHours / 5) * 100
+                  )
+                );
 
-            if (diff === 0) label = "📍 Today";
-            else if (diff === 1) label = "👉 Tomorrow";
-            else label = `📅 Day ${diff + 1}`;
+              const d = new Date(day);
 
-            return (
-              <div
-                key={day}
-                className={styles.dayCard}
-              >
+              const formatted =
+                d.toLocaleDateString(
+                  "en-US",
+                  {
+                    weekday: "long",
+                    month: "short",
+                    day: "numeric",
+                  }
+                );
 
-                {/* TOP */}
-                <div className={styles.dayTop}>
-                  <h3>{label}</h3>
+              return (
 
-                  <span className={styles.hours}>
-                    ⏱ {data.totalHours} hrs
-                  </span>
-                </div>
+                <div
+                  key={day}
+                  className={styles.timelineCard}
+                >
 
-                {/* TASKS */}
-                {data.tasks.length === 0 ? (
-                  <p className={styles.noTasks}>
-                    No tasks scheduled
-                  </p>
-                ) : (
-                  <div className={styles.taskList}>
-                    {data.tasks.map((t, i) => (
-                      <div
-                        key={i}
-                        className={styles.taskItem}
-                      >
+                  {/* LEFT TIMELINE */}
 
-                        <div>
-                          <p className={styles.taskTitle}>
-                            {t.title}
-                          </p>
+                  <div className={styles.timelineLeft}>
 
-                          <span
-                            className={`${styles.badge} ${styles[t.difficulty]
-                              }`}
-                          >
-                            {t.difficulty}
-                          </span>
-                        </div>
+                    <div className={styles.timelineDot} />
 
-                        <span className={styles.duration}>
-                          {t.duration}h
-                        </span>
+                    {
+                      index !==
+                      sortedDays.length - 1 && (
+                        <div
+                          className={
+                            styles.timelineLine
+                          }
+                        />
+                      )
+                    }
+
+                  </div>
+
+                  {/* RIGHT CONTENT */}
+
+                  <div className={styles.timelineContent}>
+
+                    {/* TOP */}
+
+                    <div className={styles.cardTop}>
+
+                      <div>
+
+                        <h3>
+                          {formatted}
+                        </h3>
+
+                        <p>
+                          {totalTasks} Tasks Planned
+                        </p>
 
                       </div>
-                    ))}
-                  </div>
-                )}
 
-              </div>
-            );
-          })}
-        </div>
+                      <div
+                        className={
+                          styles.productivity
+                        }
+                      >
+                        {productivity}%
+                      </div>
+
+                    </div>
+
+                    {/* STATS */}
+
+                    <div className={styles.statsRow}>
+
+                      <div className={styles.stat}>
+                        ⏱ {data.totalHours}h
+                      </div>
+
+                      <div className={styles.stat}>
+                        📚 {totalTasks} Tasks
+                      </div>
+
+                      <div className={styles.stat}>
+                        🔥 {hardTasks} Hard
+                      </div>
+
+                    </div>
+
+                    {/* TASKS */}
+
+                    <div className={styles.taskList}>
+
+                      {data.tasks.map((t, i) => (
+
+                        <div
+                          key={i}
+                          className={styles.taskItem}
+                        >
+
+                          <div>
+
+                            <h4>
+                              {t.title}
+                            </h4>
+
+                            <span
+                              className={`${styles.badge}
+                    ${styles[t.difficulty]}`}
+                            >
+                              {t.difficulty}
+                            </span>
+
+                          </div>
+
+                          <div
+                            className={
+                              styles.taskRight
+                            }
+                          >
+
+                            <span>
+                              {t.duration}h
+                            </span>
+
+                          </div>
+
+                        </div>
+                      ))}
+
+                    </div>
+
+                  </div>
+
+                </div>
+              );
+            })}
+          </div>
       )}
 
     </div>

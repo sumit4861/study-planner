@@ -92,9 +92,7 @@ function TaskInput({
           <label>Duration (hours)</label>
 
           <input
-            type="number"
-            min="1"
-            max="12"
+            // type ="number"
             value={duration}
             onChange={(e) => setDuration(Number(e.target.value))}
             placeholder="Hours"

@@ -15,11 +15,10 @@ function Sidebar() {
     <aside className={styles.sidebar}>
 
       {/* LOGO */}
+      <h2 className={styles.logo}>
+        📘 StudyAI
+      </h2>
       <div className={styles.topSection}>
-        <h2 className={styles.logo}>
-          📘 StudyAI
-        </h2>
-
         {/* MENU */}
         <div className={styles.menu}>
           {menu.map((item) => (
@@ -39,18 +38,19 @@ function Sidebar() {
             </div>
           ))}
         </div>
+        {/* LOGOUT */}
+        <div
+          className={styles.logout}
+          onClick={() => {
+            localStorage.removeItem("token");
+            navigate("/login");
+          }}
+        >
+          🚪 Logout
+        </div>
+
       </div>
 
-      {/* LOGOUT */}
-      <div
-        className={styles.logout}
-        onClick={() => {
-          localStorage.removeItem("token");
-          navigate("/login");
-        }}
-      >
-        🚪 Logout
-      </div>
 
     </aside>
   );

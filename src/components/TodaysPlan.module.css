@@ -31,6 +31,8 @@
 
 /* ─── LIST ──────────────────────────────────────── */
 .taskList {
+  max-height: 250px;
+  overflow: auto;
   display: flex;
   flex-direction: column;
   gap: 10px;
