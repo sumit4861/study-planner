@@ -44,42 +44,30 @@ function Auth({ setIsLoggedIn }) {
 
       const res = await fetch(url, {
         method: "POST",
-
         headers: {
           "Content-Type": "application/json"
         },
-
         body: JSON.stringify(body)
       });
-
       const data = await res.json();
-
       if (!res.ok) {
         setError(
           data.msg || "Something went wrong."
         );
         return;
       }
-
       if (isLogin) {
-
         localStorage.setItem(
           "token",
           data.token
         );
-
         setIsLoggedIn(true);
         navigate("/");
-
       } else {
-
         setError("");
-
         setIslogin(true);
       }
-
     } catch (err) {
-
       setError("Server error. Try again.");
     }
   };
@@ -199,7 +187,7 @@ function Auth({ setIsLoggedIn }) {
           {/* BUTTON */}
           <button
             className={styles.submitBtn}
-            onClick={handleSubmit}
+            type="submit"
           >
             {isLogin
               ? "Login"

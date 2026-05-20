@@ -15,7 +15,13 @@ const Task = require("./models/Task");
 const auth = require("./middleware/auth");
 const generateSmartPlan = require("./utils/scheduler");
 // middleware
-app.use(cors());
+app.use(cors({
+  origin: [
+    "http://localhost:5173",
+    "https://YOUR-FRONTEND.vercel.app"
+  ],
+  credentials: true
+}));
 app.use(express.json());
 
 
