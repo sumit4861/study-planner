@@ -7,6 +7,9 @@ import planStyles from "./Tasks.module.css";
 
 import TaskInput from "../components/TaskInput";
 
+const API = import.meta.env.VITE_API_URL;
+
+
 const MONTH_NAMES = [
   "January", "February", "March", "April", "May", "June",
   "July", "August", "September", "October", "November", "December"

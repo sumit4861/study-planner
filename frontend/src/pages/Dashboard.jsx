@@ -5,7 +5,9 @@ import FiveDaysPlan from "../components/FiveDaysPlan";
 import AISuggestions from "../components/AISuggestions";
 import Sidebar from "../components/Sidebar";
 import styles from "./Dashboard.module.css";
+
 const API = import.meta.env.VITE_API_URL;
+
   import.meta.env.VITE_API_URL;
 function Dashboard({ setIsLoggedIn }) {
   const [task, setTask] = useState("");

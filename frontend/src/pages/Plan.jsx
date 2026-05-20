@@ -2,7 +2,9 @@ import { useEffect, useState } from "react";
 import Sidebar from "../components/Sidebar";
 import dashStyles from "./Dashboard.module.css";
 import planStyles from "./Plan.module.css";
+
 const API = import.meta.env.VITE_API_URL;
+
 function Plan() {
   const [tasks, setTasks] = useState([]);
   const [plan, setPlan] = useState({});

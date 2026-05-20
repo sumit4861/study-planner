@@ -2,6 +2,7 @@ import { useState } from "react";
 import styles from "./Auth.module.css";
 import { useNavigate } from "react-router-dom";
 
+const API = import.meta.env.VITE_API_URL;
 function Auth({ setIsLoggedIn }) {
 
   const [error, setError] = useState("");
@@ -40,8 +41,7 @@ function Auth({ setIsLoggedIn }) {
       }
       : form;
 
-    try {
-
+    try { 
       const res = await fetch(url, {
         method: "POST",
         headers: {
