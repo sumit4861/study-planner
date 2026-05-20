@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import TaskInput from "../components/TaskInput";
 import TodaysPlan from "../components/TodaysPlan";
 import FiveDaysPlan from "../components/FiveDaysPlan";
-import AISuggestions from "../components/AISuggestions";
 import Sidebar from "../components/Sidebar";
 import styles from "./Dashboard.module.css";
 

@@ -1,4 +1,4 @@
-import styles from "./FiveDaysPlan.module.css";
+import styles from "../styles/FiveDaysPlan.module.css";
 
 function FiveDaysPlan({ setPlan, fetchPlan, plan }) {
 

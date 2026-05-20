@@ -1,4 +1,4 @@
-import styles from "./TaskInput.module.css";
+import styles from "../styles/TaskInput.module.css";
 
 function TaskInput({
   task,

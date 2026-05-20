@@ -1,5 +1,5 @@
 import { useState } from "react";
-import styles from "./Auth.module.css";
+import styles from "../styles/Auth.module.css";
 import { useNavigate } from "react-router-dom";
 
 const API = import.meta.env.VITE_API_URL;

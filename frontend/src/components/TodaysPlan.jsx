@@ -1,4 +1,4 @@
-import styles from "./TodaysPlan.module.css";
+import styles from "../styles/TodaysPlan.module.css";
 
 function TodaysPlan({
   todaysTasks = [],

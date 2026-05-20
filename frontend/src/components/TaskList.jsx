@@ -1,4 +1,4 @@
-import styles from "./TaskList.module.css";
+import styles from "../styles/TaskList.module.css";
 
 function TaskList({ tasks, deleteTask }) {
   if (tasks.length === 0) {
