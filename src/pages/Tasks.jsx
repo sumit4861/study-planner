@@ -25,8 +25,7 @@ function Tasks() {
 
   useEffect(() => {
 
-    fetch(
-      "http://localhost:5000/api/tasks",
+    fetch(`${API}/api/tasks`,
       {
         headers: {
           Authorization:
@@ -43,8 +42,7 @@ function Tasks() {
 
     try {
 
-      await fetch(
-        `http://localhost:5000/api/tasks/${id}`,
+      await fetch(`${API}/api/tasks/${id}`,
         {
           method: "DELETE",
 

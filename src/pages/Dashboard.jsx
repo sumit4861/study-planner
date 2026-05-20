@@ -5,7 +5,8 @@ import FiveDaysPlan from "../components/FiveDaysPlan";
 import AISuggestions from "../components/AISuggestions";
 import Sidebar from "../components/Sidebar";
 import styles from "./Dashboard.module.css";
-
+const API = import.meta.env.VITE_API_URL;
+  import.meta.env.VITE_API_URL;
 function Dashboard({ setIsLoggedIn }) {
   const [task, setTask] = useState("");
   const [date, setDate] = useState("");
@@ -20,7 +21,7 @@ function Dashboard({ setIsLoggedIn }) {
   useEffect(() => {
     const getTasks = async () => {
       try {
-        const res = await fetch("http://localhost:5000/api/tasks", {
+        const res = await fetch(`${API}/api/tasks`, {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`
           }
@@ -53,7 +54,7 @@ function Dashboard({ setIsLoggedIn }) {
       priority: priority
     };
 
-    const res = await fetch("http://localhost:5000/api/tasks", {
+    const res = await fetch(`${API}/api/tasks`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -73,7 +74,7 @@ function Dashboard({ setIsLoggedIn }) {
 
   const toggleStatus = async (id) => {
     try {
-      const res = await fetch(`http://localhost:5000/api/tasks/${id}`, {
+      const res = await fetch(`${API}/api/tasks/${id}`, {
         method: "PUT",
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`
@@ -113,7 +114,7 @@ function Dashboard({ setIsLoggedIn }) {
     setLoadingAI(true);
 
     try {
-      const res = await fetch("http://localhost:5000/api/generate-plan", {
+      const res = await fetch(`${API}/api/generate-plan`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -146,7 +147,7 @@ function Dashboard({ setIsLoggedIn }) {
   const getAISuggestions = async () => {
     setLoadingAI(true);
 
-    const res = await fetch("http://localhost:5000/api/plan/ai", {
+    const res = await fetch(`${API}/api/plan/ai`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -170,7 +171,7 @@ function Dashboard({ setIsLoggedIn }) {
     }
 
     try {
-      const res = await fetch("http://localhost:5000/api/tasks", {
+      const res = await fetch(`${API}/api/tasks`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -252,7 +253,7 @@ function Dashboard({ setIsLoggedIn }) {
   }
 
   const fetchPlan = async () => {
-    const res = await fetch("http://localhost:5000/api/plan", {
+    const res = await fetch(`${API}/api/plan`, {
       headers: {
         Authorization: `Bearer ${localStorage.getItem("token")}`
       }

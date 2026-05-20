@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import Sidebar from "../components/Sidebar";
 import dashStyles from "./Dashboard.module.css";
 import planStyles from "./Plan.module.css";
-
+const API = import.meta.env.VITE_API_URL;
 function Plan() {
   const [tasks, setTasks] = useState([]);
   const [plan, setPlan] = useState({});
@@ -11,7 +11,7 @@ function Plan() {
 
   /* FETCH TASKS */
   useEffect(() => {
-    fetch("http://localhost:5000/api/tasks", {
+    fetch(`${API}/api/tasks`, {
       headers: {
         Authorization: `Bearer ${localStorage.getItem("token")}`,
       },
@@ -23,7 +23,7 @@ function Plan() {
   /* GENERATE NORMAL PLAN */
   const fetchPlan = async () => {
     try {
-      const res = await fetch("http://localhost:5000/api/plan", {
+      const res = await fetch(`${API}/api/plan`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -45,7 +45,7 @@ function Plan() {
     }
     setLoadingAI(true);
     try {
-      const res = await fetch("http://localhost:5000/api/generate-plan", {
+      const res = await fetch(`${API}/api/generate-plan`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -64,7 +64,7 @@ function Plan() {
   /* ADD AI TASK */
   const addAITask = async (task, date) => {
     try {
-      const res = await fetch("http://localhost:5000/api/tasks", {
+      const res = await fetch(`${API}/api/tasks`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

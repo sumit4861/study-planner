@@ -30,8 +30,8 @@ function Auth({ setIsLoggedIn }) {
     setError("");
 
     const url = isLogin
-      ? "http://localhost:5000/api/auth/login"
-      : "http://localhost:5000/api/auth/signup";
+      ? `${API}/api/auth/login`
+      : `${API}/api/auth/signup`
 
     const body = isLogin
       ? {
