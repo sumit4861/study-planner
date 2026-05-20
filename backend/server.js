@@ -18,7 +18,8 @@ const generateSmartPlan = require("./utils/scheduler");
 app.use(cors({
   origin: [
     "http://localhost:5173",
-    "https://YOUR-FRONTEND.vercel.app"
+    "http://localhost:4173",
+    "https://study-planner-1-qnul.onrender.com/"
   ],
   credentials: true
 }));
