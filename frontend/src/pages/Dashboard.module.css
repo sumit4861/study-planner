@@ -295,27 +295,45 @@
    RESPONSIVE
    ═══════════════════════════════════════════════════ */
 
-/* ── Wide Tablet: collapse sidebar to icons, hide right panel ── */
+/* ── Wide Tablet: narrow sidebar + slightly narrower right panel ── */
 @media (max-width: 1280px) {
   .dashboard {
     grid-template-columns: 80px minmax(0, 1fr) 300px;
   }
 }
 
-/* ── Tablet: hide right panel, sidebar icon-only ── */
+/* ── Tablet: sidebar goes to top, right panel stacks below main ── */
 @media (max-width: 1024px) {
   .dashboard {
-    grid-template-columns: 80px minmax(0, 1fr);
-    grid-template-rows: 1fr;
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr auto;
+    height: auto;
+    min-height: 100vh;
+    overflow-y: auto;
+    overflow-x: hidden;
   }
 
-  /* right panel drops below as a normal flow section */
   .aiPanel {
-    display: none;
-    /* hidden on tablet — tasks/plan pages have their own layout */
+    display: flex;
+    height: auto;
+    overflow-y: visible;
+    overflow-x: hidden;
+    flex-direction: row;
+    flex-wrap: wrap;
+    padding: 0 20px 24px;
+    gap: 16px;
+    border-left: none;
+    border-top: 1px solid rgba(255, 255, 255, 0.055);
+    background: rgba(10, 18, 38, 0.5);
+  }
+
+  .aiCard {
+    flex: 1 1 280px;
+    min-width: 0;
   }
 
   .mainContent {
+    height: auto;
     padding: 20px 28px;
   }
 }
@@ -324,21 +342,27 @@
 @media (max-width: 768px) {
   .dashboard {
     grid-template-columns: 1fr;
-    grid-template-rows: auto 1fr;
+    grid-template-rows: auto 1fr auto;
     height: auto;
     min-height: 100vh;
     overflow-y: auto;
-  }
-
-  .sidebar {
-    height: auto;
-    position: relative;
   }
 
   .mainContent {
     height: auto;
     padding: 16px 18px;
     gap: 14px;
+  }
+
+  .aiPanel {
+    flex-direction: column;
+    padding: 0 18px 20px;
+    gap: 14px;
+  }
+
+  .aiCard {
+    flex: none;
+    width: 100%;
   }
 
   .topbar {
@@ -401,6 +425,11 @@
 
   .statBox h4 {
     font-size: 18px;
+  }
+
+  .aiPanel {
+    padding: 0 14px 16px;
+    gap: 12px;
   }
 
   .aiCard {

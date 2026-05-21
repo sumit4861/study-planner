@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import Sidebar from "../components/Sidebar";
-import dashStyles from "./Dashboard.module.css";
 import planStyles from "./Plan.module.css";
 
 const API = import.meta.env.VITE_API_URL;
@@ -93,7 +92,7 @@ function Plan() {
 
   return (
     /* Use Dashboard's grid shell — sidebar + content column */
-    <div className={dashStyles.dashboard}>
+    <div className={planStyles.planShell}>
 
       {/* SIDEBAR */}
       <Sidebar />
@@ -131,10 +130,10 @@ function Plan() {
           </div>
 
           <div className={planStyles.topActions}>
-            <button className={dashStyles.aiBtn} onClick={fetchPlan}>
+            <button className={planStyles.aiBtn} onClick={fetchPlan}>
               📅 Generate Plan
             </button>
-            <button className={dashStyles.aiBtn} onClick={generateAIPlan}>
+            <button className={planStyles.aiBtn} onClick={generateAIPlan}>
               {loadingAI ? "Generating..." : "🤖 AI Optimize"}
             </button>
           </div>
@@ -145,7 +144,7 @@ function Plan() {
 
           {/* LEFT — Smart Plan */}
           <section className={planStyles.pane}>
-            <div className={dashStyles.sectionHeader}>
+            <div className={planStyles.sectionHeader}>
               <h2>📅 Smart Study Plan</h2>
             </div>
             <div className={planStyles.paneScroll}>
@@ -184,7 +183,7 @@ function Plan() {
 
           {/* RIGHT — AI Plan */}
           <section className={planStyles.pane}>
-            <div className={dashStyles.sectionHeader}>
+            <div className={planStyles.sectionHeader}>
               <h2>🤖 AI Generated Plan</h2>
             </div>
             <div className={planStyles.paneScroll}>

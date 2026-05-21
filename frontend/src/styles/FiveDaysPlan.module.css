@@ -5,6 +5,11 @@
   gap: 16px;
 }
 
+.taskContainer {
+  height: 400px;
+  overflow: scroll;
+}
+
 /* ─── HEADER ────────────────────────────────────── */
 .header {
   display: flex;
